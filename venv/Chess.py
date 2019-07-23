@@ -1,27 +1,12 @@
 # imports
 import itertools
-import pygame as pg
 from pygame_functions import *
-# import chess # package from niklasf
 from Figures import *
 
 
-# fig1 = Figure(3, 3, 5, 10)
-# fig1.is_hit(5)
-# print (fig1.attack_power)
-
-# DATA STRUCTURES
-boardState = {} # pair(x,y) -> Figure object
-whiteFigs = {} # sprite -> Figure object
-blackFigs = {} # sprite -> Figure object
-
-# kings
-whiteKing = King(4, 0, 5, 10, True)
-blackKing = King(4, 7, 5, 10, False)
-
 # initialization
+boardState = {} # pair(x,y) -> Figure object
 whiteTurn = True # white always starts
-# board = chess.Board() # from chess package
 
 # set up the screen with background and two labels
 screenSize(500, 600)
@@ -36,7 +21,6 @@ showLabel(playerLabel)
 # HP and AP labels
 hpLabel = makeLabel("HP: 5/5", 15, 300, 50, "green", "Cooper Black")
 apLabel = makeLabel("AP: 5", 15, 400, 50, "orange", "Cooper Black")
-
 
 # character labels
 startChar = bytes('A', 'utf-8')
@@ -56,194 +40,73 @@ moveSprite(boardSprite, 50, 100)
 showSprite(boardSprite)
 selectionSprite = makeSprite("images/selected.png")
 
-# moves the sprite to the specified field and stores it in the correct set
-def move_and_store(sprite, column, row, white, object):
-    assert column in [0,1,2,3,4,5,6,7] and row in [0,1,2,3,4,5,6,7]
-    x = 50 + column*50
-    y = 450 - row*50
-    moveSprite(sprite, x, y)
-    # storing the sprite in correct set
-    if (white):
-        # fig = King(column, row, 5, 10, True)
-        whiteFigs[sprite] = object
-        # whiteFigs.add(Figure(column, row, 5, 10, sprite))
-        # print("white: " + str(len(whiteFigs)))
-    else:
-        # fig = King(column, row, 5, 10, False)
-        blackFigs[sprite] = object
-        # blackFigs.add(Figure(column, row, 5, 10, sprite))
-        # print("black: " + str(len(blackFigs)))
-    boardState[(column,row)] = object
-    # print(len(boardState))
-
 # initializes the white (black) pieces if white=True (white=False)
 def init_pieces(white):
     if(white):
+        # king
+        boardState[(4, 0)] = King(4, 0, 5, 10, True, makeSprite("images/w_figures/king.png"))
         # pawns
         for x in range(8):
-            pawnSprite = makeSprite("images/w_figures/pawn.png")
-            move_and_store(pawnSprite, x, 1, True, Pawn(x, 1, 5, 10, True))
-            showSprite(pawnSprite)
-        # king
-        kingSprite = makeSprite("images/w_figures/king.png")
-        move_and_store(kingSprite, 4, 0, True, whiteKing)
-        showSprite(kingSprite)
+
+            boardState[(x, 1)] = Pawn(x, 1, 5, 10, True, makeSprite("images/w_figures/pawn.png"))
         # queen
-        queenSprite = makeSprite("images/w_figures/queen.png")
-        move_and_store(queenSprite, 3, 0, True, Queen(3, 0, 5, 10, True))
-        showSprite(queenSprite)
+        boardState[(3, 0)] = Queen(3, 0, 5, 10, True, makeSprite("images/w_figures/queen.png"))
         # rooks
-        for x in range(2):
-            rookSprite = makeSprite("images/w_figures/rook.png")
-            if (x == 1):
-                move_and_store(rookSprite, 0, 0, True, Rook(0, 0, 5, 10, True))
-            else:
-                move_and_store(rookSprite, 7, 0, True, Rook(7, 0, 5, 10, True))
-            showSprite(rookSprite)
+        boardState[(0, 0)] = Rook(0, 0, 5, 10, True, makeSprite("images/w_figures/rook.png"))
+        boardState[(7, 0)] = Rook(7, 0, 5, 10, True, makeSprite("images/w_figures/rook.png"))
         # knights
-        for x in range(2):
-            knightSprite = makeSprite("images/w_figures/knight.png")
-            if (x == 1):
-                move_and_store(knightSprite, 1, 0, True, Knight(1, 0, 5, 10, True))
-            else:
-                move_and_store(knightSprite, 6, 0, True, Knight(6, 0, 5, 10, True))
-            showSprite(knightSprite)
+        boardState[(1, 0)] = Knight(1, 0, 5, 10, True, makeSprite("images/w_figures/knight.png"))
+        boardState[(6, 0)] = Knight(6, 0, 5, 10, True, makeSprite("images/w_figures/knight.png"))
         # bishops
-        for x in range(2):
-            bishopSprite = makeSprite("images/w_figures/bishop.png")
-            if (x == 1):
-                move_and_store(bishopSprite, 2, 0, True, Bishop(2, 0, 5, 10, True))
-            else:
-                move_and_store(bishopSprite, 5, 0, True, Bishop(5, 0, 5, 10, True))
-            showSprite(bishopSprite)
+        boardState[(2, 0)] = Bishop(2, 0, 5, 10, True, makeSprite("images/w_figures/bishop.png"))
+        boardState[(5, 0)] = Bishop(5, 0, 5, 10, True, makeSprite("images/w_figures/bishop.png"))
     else:
+        # king
+        boardState[(4, 7)] = King(4, 7, 5, 10, False, makeSprite("images/b_figures/king.png"))
         # pawns
         for x in range(8):
-            pawnSprite = makeSprite("images/b_figures/pawn.png")
-            move_and_store(pawnSprite, x, 6, False, Pawn(x, 6, 5, 10, False))
-            showSprite(pawnSprite)
-        # king
-        kingSprite = makeSprite("images/b_figures/king.png")
-        move_and_store(kingSprite, 4, 7, False, blackKing)
-        showSprite(kingSprite)
+            boardState[(x, 6)] = Pawn(x, 6, 5, 10, False, makeSprite("images/b_figures/pawn.png"))
         # queen
-        queenSprite = makeSprite("images/b_figures/queen.png")
-        move_and_store(queenSprite, 3, 7, False, Queen(3, 7, 5, 10, False))
-        showSprite(queenSprite)
+        boardState[(3, 7)] = Queen(3, 7, 5, 10, False, makeSprite("images/b_figures/queen.png"))
         # rooks
-        for x in range(2):
-            rookSprite = makeSprite("images/b_figures/rook.png")
-            if (x == 1):
-                move_and_store(rookSprite, 0, 7, False, Rook(0, 7, 5, 10, False))
-            else:
-                move_and_store(rookSprite, 7, 7, False, Rook(7, 7, 5, 10, False))
-            showSprite(rookSprite)
+        boardState[(0, 7)] = Rook(0, 7, 5, 10, False, makeSprite("images/b_figures/rook.png"))
+        boardState[(7, 7)] = Rook(7, 7, 5, 10, False, makeSprite("images/b_figures/rook.png"))
         # knights
-        for x in range(2):
-            knightSprite = makeSprite("images/b_figures/knight.png")
-            if (x == 1):
-                move_and_store(knightSprite, 1, 7, False, Knight(1, 7, 5, 10, False))
-            else:
-                move_and_store(knightSprite, 6, 7, False, Knight(6, 7, 5, 10, False))
-            showSprite(knightSprite)
+        boardState[(1, 7)] = Knight(1, 7, 5, 10, False, makeSprite("images/b_figures/knight.png"))
+        boardState[(6, 7)] = Knight(6, 7, 5, 10, False, makeSprite("images/b_figures/knight.png"))
         # bishops
-        for x in range(2):
-            bishopSprite = makeSprite("images/b_figures/bishop.png")
-            if (x == 1):
-                move_and_store(bishopSprite, 2, 7, False, Bishop(2, 7, 5, 10, False))
-            else:
-                move_and_store(bishopSprite, 5, 7, False, Bishop(5, 7, 5, 10, False))
-            showSprite(bishopSprite)
+        boardState[(2, 7)] = Bishop(2, 7, 5, 10, False, makeSprite("images/b_figures/bishop.png"))
+        boardState[(5, 7)] = Bishop(5, 7, 5, 10, False, makeSprite("images/b_figures/bishop.png"))
 
 # set up the pieces
 init_pieces(True) # white pieces
 init_pieces(False) # black pieces
 
-# returns sprite if a figure was clicked, otherwise None
-def fig_clicked():
-    # if(whiteTurn):
-    for x in whiteFigs:
-        if(spriteClicked(x)):
-            return x
-    # else: # black turn
-    for x in blackFigs:
-        if(spriteClicked(x)):
-            return x
-    return None
+# save the kings separately
+whiteKing = boardState.get((4, 0))
+blackKing = boardState.get((4, 7))
 
+# new func: transforms mouse position to board coordinates
+def pos_2_coords(mX, mY):
+    assert mouse_on_board(mX, mY)
+    # determine which field was clicked
+    x = 0
+    while (mX - 50 >= 50):
+        mX = mX - 50
+        x = x + 1
+    y = 7
+    while (mY - 50 >= 100):
+        mY = mY - 50
+        y = y - 1
+    # print (str(x)+", "+str(y))
+    return (x, y)
 
-# returns the coordinates if the board was clicked, otherwise None
-def boardClicked():
-    if(spriteClicked(boardSprite)):
-        # determine which field was clicked
-        mX = mouseX()
-        mY = mouseY()
-        x = 0
-        while(mX - 50 >= 50):
-            mX = mX - 50
-            x = x + 1
-        y = 7
-        while (mY - 50 >= 100):
-            mY = mY - 50
-            y = y - 1
-        return (x, y)
-    return None
-
-
-# deletes figure on the field if there is one. Returns True if the figure may move to the field
-def del_fig_on_pos(coordinates, attack_power):
-    if whiteTurn:
-        for x in blackFigs:
-            fig = blackFigs.get(x)
-            if (fig.x, fig.y) == coordinates:
-                fig.is_hit(attack_power)
-                # print(fig.is_dead)
-                if fig.armour <= 0:
-                    killSprite(x)
-                    del blackFigs[x]
-                    print("#blackFigs: " + str(len(blackFigs)))
-                    return True # may move cause it's dead
-                else:
-                    return False
-        return True # may move because there was no figure
-    else:
-        for x in whiteFigs:
-            fig = whiteFigs.get(x)
-            if (fig.x, fig.y) == coordinates:
-                fig.is_hit(attack_power)
-                if fig.armour <= 0:
-                    killSprite(x)
-                    del whiteFigs[x]
-                    print("#whiteFigs: " + str(len(whiteFigs)))
-                    return True  # may move cause it's dead
-                else:
-                    return False
+# new func: checks if mouse position is on board
+def mouse_on_board(mX, mY):
+    if mX >= 50 and mX <= 450 and mY >= 100 and mY <= 500:
+        # print("Maus im Feld")
         return True
-
-
-# looks up the (x, y) position of the given sprite and returns it
-def get_figure_pos(sprite):
-    if sprite in whiteFigs:
-        fig = whiteFigs.get(sprite)
-    else:
-        fig = blackFigs.get(sprite)
-    return (fig.x, fig.y)
-
-
-# get letter of a coordinate for chess package
-def number_to_letter(number):
-    switcher = {
-        0: "a",
-        1: "b",
-        2: "c",
-        3: "d",
-        4: "e",
-        5: "f",
-        6: "g",
-        7: "h"
-    }
-    return switcher.get(number)
-
+    return False
 
 # switches the playerLabel to white (black) if white = true (white = False)
 def switch_player_label(white):
@@ -253,113 +116,125 @@ def switch_player_label(white):
     else:
         changeLabel(playerLabel, "Spieler 2 (Schwarz) ist dran!", "black")
 
+# code that handles the stats when you hover your mouse over figs
+def hover():
+    mX = mouseX()
+    mY = mouseY()
+    if mouse_on_board(mX, mY):
+        # mouse is translated to field
+        mousePair = pos_2_coords(mX, mY)
+        # there's a fig on the field
+        if mousePair in boardState:
+            # print(mousePair)
+            # get the figure
+            hoverFig = boardState.get(mousePair)
+            # set the HP and AP labels
+            changeLabel(hpLabel, "HP: " + str(hoverFig.armour) + "/" + str(hoverFig.max_armour))
+            showLabel(hpLabel)
+            changeLabel(apLabel, "AP: " + str(hoverFig.attack_power))
+            showLabel(apLabel)
+            # draw the life bar
+            drawRect(300, 0, 200, 50, "black")
+            drawRect(300, 0, round(hoverFig.armour / hoverFig.max_armour * 200), 50, "green")
+        else:
+            # don't show hover stuff
+            drawRect(300, 0, 200, 50, "dark grey")
+            hideLabel(hpLabel)
+            hideLabel(apLabel)
+    else:
+        # don't show hover stuff
+        drawRect(300, 0, 200, 50, "dark grey")
+        hideLabel(hpLabel)
+        hideLabel(apLabel)
 
 # outer loop: player selects piece
 while not whiteKing.is_dead() and not blackKing.is_dead():
-    selected = fig_clicked()
-    if selected is not None:
-        # piece selected -> selectionSprite and inner loop
-        pair = get_figure_pos(selected)
-        moveSprite(selectionSprite, 50 + pair[0] * 50 , 450 - pair[1] * 50)
-        showSprite(selectionSprite)
+    # hovering code!
+    hover()
+    # end of hover code!
 
-        drawRect(300, 0, 200, 50, "black")
-        if selected in whiteFigs:
-            fig = whiteFigs[selected]
-        else:
-            fig = blackFigs[selected]
-        # print(fig.armour)
-        drawRect(300, 0, round(fig.armour/fig.max_armour*200), 50, "green")
-        # HP and AP labels
-        changeLabel(hpLabel, "HP: "+str(fig.armour)+"/"+str(fig.max_armour))
-        showLabel(hpLabel)
-        changeLabel(apLabel, "AP: "+str(fig.attack_power))
-        showLabel(apLabel)
-
-        # was a figure of your own colour selected?
-        own_colour = (selected in whiteFigs) == whiteTurn
-        print(own_colour)
-        pause(100)
-        # inner loop: player selects target field
-        while True:
-            newPos = boardClicked()
-            figSprite = fig_clicked()
-            if (newPos is not None):
-                # target field selected -> deselect or move
-                if newPos[0] == pair[0] and newPos[1] == pair[1]:
-                    # piece was unselected again -> go back to outer loop
-                    hideSprite(selectionSprite)
-                    drawRect(300, 0, 200, 50, "dark grey")
-                    hideLabel(hpLabel)
-                    hideLabel(apLabel)
+    if mousePressed():
+        mX = mouseX()
+        mY = mouseY()
+        if mouse_on_board(mX, mY):
+            mousePair = pos_2_coords(mX, mY)
+            if mousePair in boardState:
+                # figure object, no sprite!
+                selected = boardState.get(mousePair)
+                # you can only select your own figs
+                if selected.white == whiteTurn:
+                    moveSprite(selectionSprite, 50 + selected.x * 50, 450 - selected.y * 50)
+                    showSprite(selectionSprite)
                     pause(100)
-                    break
-                # a figure was clicked: determine colour
-                if figSprite is not None:
-                    figWhite = False
-                    if figSprite in whiteFigs:
-                        figWhite = True
-                    # clicked is same color as selected
-                    if boardState[pair].white == figWhite:
-                        selected = figSprite
-                        pair = get_figure_pos(selected)
-                        moveSprite(selectionSprite, 50 + pair[0] * 50, 450 - pair[1] * 50)
-                        # hp/ap
-                        drawRect(300, 0, 200, 50, "black")
-                        drawRect(300, 0, round(boardState[pair].armour / boardState[pair].max_armour * 200), 50, "green")
-                        changeLabel(hpLabel, "HP: " + str(boardState[pair].armour) + "/" + str(boardState[pair].max_armour))
-                        showLabel(hpLabel)
-                        changeLabel(apLabel, "AP: " + str(boardState[pair].attack_power))
-                        showLabel(apLabel)
-                        pause(100)
-                        continue
-                # figure of the other colour tried to make a move -> NO
-                if not own_colour:
-                    print("Diese Figur ist nicht dran")
-                    hideSprite(selectionSprite)
-                    pause(100)
-                    break
-                # different position -> move and switch to other player if the move is legal
-                # move = number_to_letter(pair[0])+str(pair[1]+1)+number_to_letter(newPos[0])+str(newPos[1]+1)
-                # get the corresponding figure object
-                if (whiteTurn):
-                    fig = whiteFigs[selected]
-                else:
-                    fig = blackFigs[selected]
-                # move is legal -> do the move in gui and push it to package
-                if newPos in fig.possible_coordinates(boardState):
-                    drawRect(300, 0, 200, 50, "dark grey")
-                    hideLabel(hpLabel)
-                    hideLabel(apLabel)
-                    # other player on field?
-                    if del_fig_on_pos(newPos, fig.attack_power):
-                        print("Let's move")
-                        # the figure may move to the new field
-                        # move_and_store(selected, newPos[0], newPos[1], whiteTurn)
-                        moveSprite(selected, 50 + newPos[0]*50, 450 - newPos[1]*50)
-                        fig.x = newPos[0]
-                        fig.y = newPos[1]
-                        # change in boardState
-                        print(len(boardState))
-                        del boardState[pair]
-                        print(len(boardState))
-                        boardState[newPos] = fig
-                        print(len(boardState))
-                    whiteTurn = whiteTurn ^ True  # switch player
-                    switch_player_label(whiteTurn)
-                    hideSprite(selectionSprite)
-                    pause(100)
-                    break
-                else:  # illegal move
-                    newPos = None
-            tick(20)
-    tick(20)  # loop happens only 20 times/second
 
-print ("End of game!")
-# TODO find out who's the winner
+                # inner loop: player selects target field
+                while True:
+                    # hovering code!
+                    hover()
+                    # end of hover code!
 
-# necessary at the end
+                    if mousePressed():
+                        mX = mouseX()
+                        mY = mouseY()
+                        if mouse_on_board(mX, mY):
+                            secondPair = pos_2_coords(mX, mY)
+                            # ONE: Same field clicked again
+                            if mousePair == secondPair:
+                                # piece was unselected again -> go back to outer loop
+                                hideSprite(selectionSprite)
+                                pause(100)
+                                break
+
+                            # TWO: another fig of the current player's team is clicked
+                            if secondPair in boardState:
+                                # figure on target field:
+                                onTarget = boardState.get(secondPair)
+                                if onTarget.white == whiteTurn:
+                                    # you clicked another one of your figs -> this one is selected now
+                                    selected = onTarget
+                                    mousePair = (onTarget.x, onTarget.y)
+                                    moveSprite(selectionSprite, 50 + onTarget.x * 50, 450 - onTarget.y * 50)
+                                    pause(100)
+                                    continue
+
+                            # THREE: the move can be made -> other player's turn
+                            if secondPair in selected.possible_coordinates(boardState):
+                                # move is allowed
+                                if secondPair in boardState:
+                                    # enemy on target field:
+                                    enemy = boardState.get(secondPair)
+                                    enemy.is_hit(selected.attack_power)
+                                    if enemy.is_dead():
+                                        # kill it
+                                        del boardState[(enemy.x, enemy.y)]
+                                        # update entry in boardState
+                                        del boardState[(selected.x, selected.y)]
+                                        boardState[secondPair[0], secondPair[1]] = selected
+                                        # move selected fig to new field
+                                        selected.move_to(secondPair[0], secondPair[1])
+                                else:
+                                    # target field is free
+                                    # update entry in boardState
+                                    del boardState[(selected.x, selected.y)]
+                                    boardState[secondPair[0], secondPair[1]] = selected
+                                    # move selected fig to new field
+                                    selected.move_to(secondPair[0], secondPair[1])
+                                # switch player
+                                whiteTurn = whiteTurn ^ True
+                                switch_player_label(whiteTurn)
+                                hideSprite(selectionSprite)
+                                pause(100)
+                                break
+
+                            # FOUR: illegal move -> do nothing
+                    tick(20) # inner loop wait
+    tick(20)  # outer loop happens only 20 times/second
+
+# AFTERGAME:
+# final prints
+if whiteKing.is_dead():
+    print("Black wins!")
+else:
+    print("White wins!")
+# close window
 endWait()
-
-
-

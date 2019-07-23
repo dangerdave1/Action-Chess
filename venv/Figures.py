@@ -1,18 +1,30 @@
 import abc
+import pygame as pg
+from pygame_functions import *
 
 class Figure:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, x, y, attack_power, armour, white):
+    def __init__(self, x, y, attack_power, armour, white, sprite):
         self.x = x
         self.y = y
         self.attack_power = attack_power
         self.armour = armour
         self.max_armour = armour
         self.white = white
+        # handle sprite
+        self.sprite = sprite
+        moveSprite(self.sprite, 50 + x * 50, 450 - y * 50)
+        showSprite(self.sprite)
+
+    def move_to(self, newx, newy):
+        self.x = newx
+        self.y = newy
+        moveSprite(self.sprite, 50 + newx * 50, 450 - newy * 50)
 
     def is_dead(self):
         if self.armour <= 0:
+            hideSprite(self.sprite)
             return True
         return False
 
