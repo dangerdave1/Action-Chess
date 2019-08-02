@@ -147,6 +147,37 @@ def hover():
         hideLabel(hpLabel)
         hideLabel(apLabel)
 
+def ghosts(selected):
+    ghostFields = selected.possible_coordinates(boardState)
+    ghostSprites = set()
+
+    # get the string needed for adressing the sprite image
+    strName = ""
+    if isinstance(selected, King):
+        strName = "king"
+    elif isinstance(selected, Pawn):
+        strName = "pawn"
+    elif isinstance(selected, Knight):
+        strName = "knight"
+    elif isinstance(selected, Queen):
+        strName = "queen"
+    elif isinstance(selected, Rook):
+        strName = "rook"
+    elif isinstance(selected, Bishop):
+        strName = "bishop"
+    else:
+        strName = "error"
+
+    for field in ghostFields:
+        sprite = makeSprite("images/ghost_figures/" + strName + ".png")
+        moveSprite(sprite, 50 + field[0] * 50, 450 - field[1] * 50)
+        showSprite(sprite)
+        ghostSprites.add(sprite)
+
+    return ghostSprites
+
+# -------------- Main Start ----------------- #
+
 # outer loop: player selects piece
 while not whiteKing.is_dead() and not blackKing.is_dead():
     # hovering code!
@@ -165,69 +196,82 @@ while not whiteKing.is_dead() and not blackKing.is_dead():
                 if selected.white == whiteTurn:
                     moveSprite(selectionSprite, 50 + selected.x * 50, 450 - selected.y * 50)
                     showSprite(selectionSprite)
+
+                    ghostSprites = ghosts(selected)
                     pause(100)
 
-                # inner loop: player selects target field
-                while True:
-                    # hovering code!
-                    hover()
-                    # end of hover code!
+                    # inner loop: player selects target field
+                    while True:
+                        # print("Inner loop entered")
+                        # hovering code!
+                        hover()
+                        # end of hover code!
 
-                    if mousePressed():
-                        mX = mouseX()
-                        mY = mouseY()
-                        if mouse_on_board(mX, mY):
-                            secondPair = pos_2_coords(mX, mY)
-                            # ONE: Same field clicked again
-                            if mousePair == secondPair:
-                                # piece was unselected again -> go back to outer loop
-                                hideSprite(selectionSprite)
-                                pause(100)
-                                break
-
-                            # TWO: another fig of the current player's team is clicked
-                            if secondPair in boardState:
-                                # figure on target field:
-                                onTarget = boardState.get(secondPair)
-                                if onTarget.white == whiteTurn:
-                                    # you clicked another one of your figs -> this one is selected now
-                                    selected = onTarget
-                                    mousePair = (onTarget.x, onTarget.y)
-                                    moveSprite(selectionSprite, 50 + onTarget.x * 50, 450 - onTarget.y * 50)
+                        if mousePressed():
+                            mX = mouseX()
+                            mY = mouseY()
+                            if mouse_on_board(mX, mY):
+                                secondPair = pos_2_coords(mX, mY)
+                                # ONE: Same field clicked again
+                                if mousePair == secondPair:
+                                    # piece was unselected again -> go back to outer loop
+                                    hideSprite(selectionSprite)
+                                    # hide the ghosts
+                                    for ghost in ghostSprites:
+                                        hideSprite(ghost)
                                     pause(100)
-                                    continue
+                                    break
 
-                            # THREE: the move can be made -> other player's turn
-                            if secondPair in selected.possible_coordinates(boardState):
-                                # move is allowed
+                                # TWO: another fig of the current player's team is clicked
                                 if secondPair in boardState:
-                                    # enemy on target field:
-                                    enemy = boardState.get(secondPair)
-                                    enemy.is_hit(selected.attack_power)
-                                    if enemy.is_dead():
-                                        # kill it
-                                        del boardState[(enemy.x, enemy.y)]
+                                    # figure on target field:
+                                    onTarget = boardState.get(secondPair)
+                                    if onTarget.white == whiteTurn:
+                                        # you clicked another one of your figs -> this one is selected now
+                                        selected = onTarget
+                                        mousePair = (onTarget.x, onTarget.y)
+                                        moveSprite(selectionSprite, 50 + onTarget.x * 50, 450 - onTarget.y * 50)
+                                        # show new ghosts
+                                        for ghost in ghostSprites:
+                                            hideSprite(ghost)
+                                        ghostSprites = ghosts(selected)
+                                        pause(100)
+                                        continue
+
+                                # THREE: the move can be made -> other player's turn
+                                if secondPair in selected.possible_coordinates(boardState):
+                                    # hide ghosts
+                                    for ghost in ghostSprites:
+                                        hideSprite(ghost)
+                                    # move is allowed
+                                    if secondPair in boardState:
+                                        # enemy on target field:
+                                        enemy = boardState.get(secondPair)
+                                        enemy.is_hit(selected.attack_power)
+                                        if enemy.is_dead():
+                                            # kill it
+                                            del boardState[(enemy.x, enemy.y)]
+                                            # update entry in boardState
+                                            del boardState[(selected.x, selected.y)]
+                                            boardState[secondPair[0], secondPair[1]] = selected
+                                            # move selected fig to new field
+                                            selected.move_to(secondPair[0], secondPair[1])
+                                    else:
+                                        # target field is free
                                         # update entry in boardState
                                         del boardState[(selected.x, selected.y)]
                                         boardState[secondPair[0], secondPair[1]] = selected
                                         # move selected fig to new field
                                         selected.move_to(secondPair[0], secondPair[1])
-                                else:
-                                    # target field is free
-                                    # update entry in boardState
-                                    del boardState[(selected.x, selected.y)]
-                                    boardState[secondPair[0], secondPair[1]] = selected
-                                    # move selected fig to new field
-                                    selected.move_to(secondPair[0], secondPair[1])
-                                # switch player
-                                whiteTurn = whiteTurn ^ True
-                                switch_player_label(whiteTurn)
-                                hideSprite(selectionSprite)
-                                pause(100)
-                                break
+                                    # switch player
+                                    whiteTurn = whiteTurn ^ True
+                                    switch_player_label(whiteTurn)
+                                    hideSprite(selectionSprite)
+                                    pause(100)
+                                    break
 
-                            # FOUR: illegal move -> do nothing
-                    tick(20) # inner loop wait
+                                # FOUR: illegal move -> do nothing
+                        tick(20) # inner loop wait
     tick(20)  # outer loop happens only 20 times/second
 
 # AFTERGAME:
