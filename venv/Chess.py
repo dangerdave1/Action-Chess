@@ -3,7 +3,6 @@ import itertools
 from pygame_functions import *
 from Figures import *
 
-
 # initialization
 boardState = {} # pair(x,y) -> Figure object
 whiteTurn = True # white always starts
@@ -14,13 +13,32 @@ setBackgroundImage("images/wood.png")
 drawRect(0, 0, 500, 50, "dark grey")
 titleLabel = makeLabel("Chess Champions", 30, 10, 10, "brown", "Cooper Black", "dark grey")
 showLabel(titleLabel)
-drawRect(0, 550, 500, 50, "dark grey")
-playerLabel = makeLabel("Spieler 1 (Weiß) ist dran!", 20, 10, 563, "white", "Cooper Black", "dark grey")
-showLabel(playerLabel)
 
 # HP and AP labels
 hpLabel = makeLabel("HP: 5/5", 15, 300, 50, "green", "Cooper Black")
 apLabel = makeLabel("AP: 5", 15, 400, 50, "orange", "Cooper Black")
+
+# new: including items
+wpItem = True; # tells if white player still has his item
+bpItem = True;
+
+# player label
+# switches the playerLabel to white (black) if white = true (white = False)
+def switch_player_label(white):
+    if white:
+        drawRect(0, 550, 500, 50, "dark grey")
+        changeLabel(playerLabel, "Spieler 1 (Weiß) ist dran!", "white")
+        if wpItem:
+            drawRect(450, 550, 50, 50, "yellow")
+    else:
+        drawRect(0, 550, 500, 50, "dark grey")
+        changeLabel(playerLabel, "Spieler 2 (Schwarz) ist dran!", "black")
+        if bpItem:
+            drawRect(450, 550, 50, 50, "yellow")
+
+playerLabel = makeLabel("Spieler 1 (Weiß) ist dran!", 20, 10, 563, "white", "Cooper Black", "dark grey")
+showLabel(playerLabel)
+switch_player_label(whiteTurn)
 
 # character labels
 startChar = bytes('A', 'utf-8')
@@ -108,14 +126,6 @@ def mouse_on_board(mX, mY):
         return True
     return False
 
-# switches the playerLabel to white (black) if white = true (white = False)
-def switch_player_label(white):
-    if white:
-        drawRect(0, 550, 500, 50, "dark grey")
-        changeLabel(playerLabel, "Spieler 1 (Weiß) ist dran!", "white")
-    else:
-        changeLabel(playerLabel, "Spieler 2 (Schwarz) ist dran!", "black")
-
 # code that handles the stats when you hover your mouse over figs
 def hover():
     mX = mouseX()
@@ -187,6 +197,7 @@ while not whiteKing.is_dead() and not blackKing.is_dead():
     if mousePressed():
         mX = mouseX()
         mY = mouseY()
+        print("pressed")
         if mouse_on_board(mX, mY):
             mousePair = pos_2_coords(mX, mY)
             if mousePair in boardState:
@@ -269,9 +280,16 @@ while not whiteKing.is_dead() and not blackKing.is_dead():
                                     hideSprite(selectionSprite)
                                     pause(100)
                                     break
-
-                                # FOUR: illegal move -> do nothing
+                                   # FOUR: illegal move -> do nothing
                         tick(20) # inner loop wait
+        else:  # mouse is not on board
+            if mX >= 450 and mX <= 500 and mY >= 550 and mY <= 600:
+                print("square")
+                if whiteTurn:
+                    wpItem = False
+                else:
+                    bpItem = False;
+                drawRect(450, 550, 50, 50, "dark grey")
     tick(20)  # outer loop happens only 20 times/second
 
 # AFTERGAME:
